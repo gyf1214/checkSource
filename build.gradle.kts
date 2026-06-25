@@ -1,5 +1,6 @@
 plugins {
     `java-gradle-plugin`
+    checkstyle
 }
 
 group = "org.shsts.checksource"
@@ -24,6 +25,10 @@ gradlePlugin {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+}
+
+checkstyle {
+    toolVersion = "10.20.1"
 }
 
 dependencies {

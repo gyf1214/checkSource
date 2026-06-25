@@ -1,15 +1,16 @@
 package org.shsts.checksource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SourceBoundaryCheckerTest {
     @TempDir
@@ -160,7 +161,8 @@ class SourceBoundaryCheckerTest {
                 .toList();
     }
 
-    private void writeSource(String sourceRoot, String sourcePackage, String filename, String content) throws IOException {
+    private void writeSource(
+            String sourceRoot, String sourcePackage, String filename, String content) throws IOException {
         var directory = tempDir.resolve(sourceRoot).resolve("org/example").resolve(sourcePackage);
         Files.createDirectories(directory);
         Files.writeString(directory.resolve(filename), content);

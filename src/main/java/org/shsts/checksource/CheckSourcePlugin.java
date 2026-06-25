@@ -25,9 +25,9 @@ public final class CheckSourcePlugin implements Plugin<Project> {
                     .getBuildDirectory()
                     .file("reports/checkSource/violations.txt"));
             task.getSourceRoots().from(mainSourceSet.getJava().getSrcDirs());
-            task.getSourceRoots().from(project.provider(() -> extension.getIncludeTest().get()
-                    ? testSourceSet.getJava().getSrcDirs()
-                    : java.util.List.of()));
+            task.getSourceRoots().from(project.provider(() -> extension.getIncludeTest().get() ?
+                    testSourceSet.getJava().getSrcDirs() :
+                    java.util.List.of()));
         });
 
         project.getTasks()
