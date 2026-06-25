@@ -1,5 +1,6 @@
 plugins {
     `java-gradle-plugin`
+    `maven-publish`
     checkstyle
 }
 
@@ -19,6 +20,25 @@ gradlePlugin {
             implementationClass = "org.shsts.checksource.CheckSourcePlugin"
             displayName = "Check Source Plugin"
             description = "Checks Java source package boundaries from Gradle source sets."
+        }
+    }
+}
+
+publishing {
+    repositories {
+        val shstsMavenUrl = providers.gradleProperty("shstsMavenUrl")
+        val shstsUser = providers.gradleProperty("shstsUser")
+        if (shstsMavenUrl.isPresent || shstsUser.isPresent) {
+            maven {
+                name = "shsts"
+                url = uri(shstsMavenUrl.orElse("https://www.shsts.org/m2").get())
+                if (shstsUser.isPresent) {
+                    credentials {
+                        username = shstsUser.get()
+                        password = providers.gradleProperty("shstsPassword").orElse("").get()
+                    }
+                }
+            }
         }
     }
 }
