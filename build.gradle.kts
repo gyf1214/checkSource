@@ -2,8 +2,8 @@ plugins {
     `java-gradle-plugin`
 }
 
-group = "dev.checksource"
-version = "0.1.0-SNAPSHOT"
+group = "org.shsts.checksource"
+version = providers.gradleProperty("version").get()
 
 java {
     toolchain {
@@ -14,8 +14,8 @@ java {
 gradlePlugin {
     plugins {
         create("checkSource") {
-            id = "dev.checksource.plugin"
-            implementationClass = "dev.checksource.CheckSourcePlugin"
+            id = "org.shsts.checksource"
+            implementationClass = "org.shsts.checksource.CheckSourcePlugin"
             displayName = "Check Source Plugin"
             description = "Gradle plugin scaffold for checkSource."
         }

@@ -1,4 +1,4 @@
-package dev.checksource;
+package org.shsts.checksource;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;

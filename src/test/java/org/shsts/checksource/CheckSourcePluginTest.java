@@ -1,4 +1,4 @@
-package dev.checksource;
+package org.shsts.checksource;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -17,7 +17,7 @@ class CheckSourcePluginTest {
     @Test
     void pluginRegistersSmokeTask() throws IOException {
         Files.writeString(projectDir.resolve("settings.gradle.kts"), "rootProject.name = \"smoke\"\n");
-        Files.writeString(projectDir.resolve("build.gradle.kts"), "plugins { id(\"dev.checksource.plugin\") }\n");
+        Files.writeString(projectDir.resolve("build.gradle.kts"), "plugins { id(\"org.shsts.checksource\") }\n");
 
         var result = GradleRunner.create()
                 .withProjectDir(projectDir.toFile())
