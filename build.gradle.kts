@@ -17,7 +17,7 @@ gradlePlugin {
             id = "org.shsts.checksource"
             implementationClass = "org.shsts.checksource.CheckSourcePlugin"
             displayName = "Check Source Plugin"
-            description = "Gradle plugin scaffold for checkSource."
+            description = "Checks Java source package boundaries from Gradle source sets."
         }
     }
 }
