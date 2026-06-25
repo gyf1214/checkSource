@@ -81,6 +81,21 @@ class SourceBoundaryCheckerTest {
     }
 
     @Test
+    void reportsExternalFullyQualifiedNamesInJavaSourceBodies() throws IOException {
+        writeSource("src/main/java", "api", "Api.java", """
+                package org.example.api;
+
+                class Api {
+                    private java.util.ArrayList<String> value;
+                }
+                """);
+
+        var violations = check(List.of(tempDir.resolve("src/main/java")), Map.of("api", List.of("core")));
+
+        assertEquals(List.of("api/Api.java:4: fully qualified type java.util.ArrayList"), messages(violations));
+    }
+
+    @Test
     void ignoresFullyQualifiedNamesInPackageAndImportLines() throws IOException {
         writeSource("src/main/java", "api", "Api.java", """
                 package org.example.api;

@@ -18,7 +18,7 @@ public final class SourceBoundaryChecker {
         var violations = new ArrayList<Violation>();
         var topPackagePath = topPackage.replace('.', '/');
         var fullyQualifiedType = Pattern.compile(
-                "\\b" + Pattern.quote(topPackage) + "(?:\\.[a-z][A-Za-z0-9_]*)+\\.[A-Z][A-Za-z0-9_]*\\b");
+                "\\b(?:[a-z_][\\w]*\\.){2,}[A-Z][\\w]*(?:\\.[A-Z][\\w]*)*\\b");
 
         for (var sourceRoot : sourceRoots) {
             var packageRoot = sourceRoot.resolve(topPackagePath);
