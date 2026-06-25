@@ -26,17 +26,14 @@ gradlePlugin {
 
 publishing {
     repositories {
-        val shstsMavenUrl = providers.gradleProperty("shstsMavenUrl")
         val shstsUser = providers.gradleProperty("shstsUser")
-        if (shstsMavenUrl.isPresent || shstsUser.isPresent) {
+        if (shstsUser.isPresent) {
             maven {
                 name = "shsts"
-                url = uri(shstsMavenUrl.orElse("https://www.shsts.org/m2").get())
-                if (shstsUser.isPresent) {
-                    credentials {
-                        username = shstsUser.get()
-                        password = providers.gradleProperty("shstsPassword").orElse("").get()
-                    }
+                url = uri("https://www.shsts.org/m2")
+                credentials {
+                    username = shstsUser.get()
+                    password = providers.gradleProperty("shstsPassword").orElse("").get()
                 }
             }
         }
