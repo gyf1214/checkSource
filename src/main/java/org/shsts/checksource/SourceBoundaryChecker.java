@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public final class SourceBoundaryChecker {
@@ -15,35 +16,51 @@ public final class SourceBoundaryChecker {
 
     public static List<Violation> check(
             List<Path> sourceRoots, String topPackage, Map<String, List<String>> bannedImports) {
+        var sourceFiles = sourceRoots.stream()
+                .map(sourceRoot -> sourceRoot.resolve(topPackage.replace('.', '/')))
+                .filter(Files::isDirectory)
+                .flatMap(packageRoot -> javaFiles(packageRoot).stream())
+                .toList();
+        return check(sourceRoots, sourceFiles, topPackage, bannedImports);
+    }
+
+    public static List<Violation> check(
+            List<Path> sourceRoots,
+            List<Path> sourceFiles,
+            String topPackage,
+            Map<String, List<String>> bannedImports) {
         var violations = new ArrayList<Violation>();
-        var topPackagePath = topPackage.replace('.', '/');
         var fullyQualifiedType = Pattern.compile(
                 "\\b(?:[a-z_][\\w]*\\.){2,}[A-Z][\\w]*(?:\\.[A-Z][\\w]*)*\\b");
 
-        for (var sourceRoot : sourceRoots) {
-            var packageRoot = sourceRoot.resolve(topPackagePath);
-            if (!Files.isDirectory(packageRoot)) {
-                continue;
-            }
-            for (var sourceFile : javaFiles(packageRoot)) {
-                checkFile(violations, packageRoot, sourceFile, topPackage, bannedImports, fullyQualifiedType);
-            }
-        }
+        sourceFiles.stream()
+                .filter(Files::isRegularFile)
+                .filter(SourceBoundaryChecker::isSupportedSourceFile)
+                .sorted(Comparator.comparing(path -> relativePath(sourceRoots, path)))
+                .forEach(sourceFile -> checkFile(
+                        violations,
+                        sourceRoots,
+                        sourceFile,
+                        topPackage,
+                        bannedImports,
+                        fullyQualifiedType));
         return List.copyOf(violations);
     }
 
     private static void checkFile(
             List<Violation> violations,
-            Path packageRoot,
+            List<Path> sourceRoots,
             Path sourceFile,
             String topPackage,
             Map<String, List<String>> bannedImports,
             Pattern fullyQualifiedType) {
         try {
-            var relativePath = packageRoot.relativize(sourceFile).toString().replace('\\', '/');
-            var sourcePackage = sourceTopLevelPackage(packageRoot, sourceFile);
-            var bannedPackages = bannedImports.getOrDefault(sourcePackage, List.of());
+            var relativePath = relativePath(sourceRoots, sourceFile);
             var lines = Files.readAllLines(sourceFile);
+            var declaredPackage = declaredPackage(lines);
+            var bannedPackages = sourcePackage(topPackage, declaredPackage)
+                    .map(sourcePackage -> bannedImports.getOrDefault(sourcePackage, List.of()))
+                    .orElse(List.of());
 
             for (var i = 0; i < lines.size(); i++) {
                 var importedType = importedType(lines.get(i));
@@ -86,12 +103,47 @@ public final class SourceBoundaryChecker {
         }
     }
 
-    private static String sourceTopLevelPackage(Path packageRoot, Path sourceFile) {
-        var relative = packageRoot.relativize(sourceFile);
-        if (relative.getNameCount() <= 1) {
-            return "";
+    private static boolean isSupportedSourceFile(Path sourceFile) {
+        var filename = sourceFile.getFileName().toString();
+        return filename.endsWith(".java") || filename.endsWith(".kt");
+    }
+
+    private static String relativePath(List<Path> sourceRoots, Path sourceFile) {
+        return sourceRoots.stream()
+                .filter(sourceRoot -> sourceFile.startsWith(sourceRoot))
+                .max(Comparator.comparingInt(sourceRoot -> sourceRoot.getNameCount()))
+                .map(sourceRoot -> sourceRoot.relativize(sourceFile))
+                .orElse(sourceFile.getFileName())
+                .toString()
+                .replace('\\', '/');
+    }
+
+    private static String declaredPackage(List<String> lines) {
+        for (var line : lines) {
+            var trimmed = line.strip();
+            if (!trimmed.startsWith("package ")) {
+                continue;
+            }
+            var packageName = trimmed.substring("package ".length()).strip();
+            if (packageName.endsWith(";")) {
+                packageName = packageName.substring(0, packageName.length() - 1).strip();
+            }
+            return packageName;
         }
-        return relative.getName(0).toString();
+        return "";
+    }
+
+    private static Optional<String> sourcePackage(String topPackage, String declaredPackage) {
+        var prefix = topPackage + ".";
+        if (!declaredPackage.startsWith(prefix)) {
+            return Optional.empty();
+        }
+        var remainder = declaredPackage.substring(prefix.length());
+        var dot = remainder.indexOf('.');
+        if (dot >= 0) {
+            return Optional.of(remainder.substring(0, dot));
+        }
+        return remainder.isEmpty() ? Optional.empty() : Optional.of(remainder);
     }
 
     private static String importedType(String line) {
@@ -103,10 +155,14 @@ public final class SourceBoundaryChecker {
         if (trimmed.startsWith("static ")) {
             trimmed = trimmed.substring("static ".length()).strip();
         }
-        if (!trimmed.endsWith(";")) {
-            return null;
+        var alias = trimmed.indexOf(" as ");
+        if (alias >= 0) {
+            trimmed = trimmed.substring(0, alias).strip();
         }
-        return trimmed.substring(0, trimmed.length() - 1).strip();
+        if (trimmed.endsWith(";")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1).strip();
+        }
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private static String stripNonCode(String source) {
