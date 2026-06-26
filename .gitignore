@@ -1,3 +1,7 @@
 .codex/
 scratch/
 MEMORY.md
+.gradle/
+build/
+out/
+*.class
