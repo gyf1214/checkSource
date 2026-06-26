@@ -26,7 +26,7 @@ pluginManagement {
 
 ```kotlin
 plugins {
-    id("org.shsts.checksource") version "0.1.0"
+    id("org.shsts.checksource") version "0.1.1"
 }
 ```
 
