@@ -39,7 +39,9 @@ class CheckSourceTaskTest {
         var error = assertThrows(GradleException.class, task::run);
 
         assertTrue(error.getMessage().contains(reportFile.toString()));
-        assertEquals("org/example/api/Api.java:3: banned import org.example.core.CoreType\n", Files.readString(reportFile));
+        assertEquals(
+                "org/example/api/Api.java:3: banned import org.example.core.CoreType\n",
+                Files.readString(reportFile));
     }
 
     @Test

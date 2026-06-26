@@ -29,7 +29,9 @@ class SourceBoundaryCheckerTest {
 
         var violations = check(List.of(tempDir.resolve("src/main/java")), Map.of("api", List.of("core")));
 
-        assertEquals(List.of("org/example/api/Api.java:3: banned import org.example.core.CoreType"), messages(violations));
+        assertEquals(
+                List.of("org/example/api/Api.java:3: banned import org.example.core.CoreType"),
+                messages(violations));
     }
 
     @Test
@@ -45,7 +47,9 @@ class SourceBoundaryCheckerTest {
 
         var violations = check(List.of(tempDir.resolve("src/main/java")), Map.of("api", List.of("core")));
 
-        assertEquals(List.of("org/example/api/Api.java:3: banned import org.example.core.CoreType.VALUE"), messages(violations));
+        assertEquals(
+                List.of("org/example/api/Api.java:3: banned import org.example.core.CoreType.VALUE"),
+                messages(violations));
     }
 
     @Test
@@ -77,7 +81,9 @@ class SourceBoundaryCheckerTest {
 
         var violations = check(List.of(tempDir.resolve("src/main/java")), Map.of("api", List.of("core")));
 
-        assertEquals(List.of("org/example/api/Api.java:4: fully qualified type org.example.core.CoreType"), messages(violations));
+        assertEquals(
+                List.of("org/example/api/Api.java:4: fully qualified type org.example.core.CoreType"),
+                messages(violations));
     }
 
     @Test
@@ -92,7 +98,9 @@ class SourceBoundaryCheckerTest {
 
         var violations = check(List.of(tempDir.resolve("src/main/java")), Map.of("api", List.of("core")));
 
-        assertEquals(List.of("org/example/api/Api.java:4: fully qualified type java.util.ArrayList"), messages(violations));
+        assertEquals(
+                List.of("org/example/api/Api.java:4: fully qualified type java.util.ArrayList"),
+                messages(violations));
     }
 
     @Test
@@ -156,7 +164,8 @@ class SourceBoundaryCheckerTest {
 
         assertEquals(List.of(
                 "org/example/api/GeneratedApi.java:4: fully qualified type org.example.core.GeneratedType",
-                "org/example/api/MainApi.java:4: fully qualified type org.example.core.CoreType"), messages(violations));
+                "org/example/api/MainApi.java:4: fully qualified type org.example.core.CoreType"),
+                messages(violations));
     }
 
     @Test
@@ -169,14 +178,19 @@ class SourceBoundaryCheckerTest {
                 }
                 """);
 
-        var defaultViolations = check(List.of(tempDir.resolve("src/main/kotlin")), List.of(), Map.of("api", List.of("core")));
+        var defaultViolations = check(
+                List.of(tempDir.resolve("src/main/kotlin")),
+                List.of(),
+                Map.of("api", List.of("core")));
         var kotlinViolations = check(
                 List.of(tempDir.resolve("src/main/kotlin")),
                 List.of(kotlinApi),
                 Map.of("api", List.of("core")));
 
         assertTrue(defaultViolations.isEmpty());
-        assertEquals(List.of("org/example/api/Api.kt:4: fully qualified type org.example.core.CoreType"), messages(kotlinViolations));
+        assertEquals(
+                List.of("org/example/api/Api.kt:4: fully qualified type org.example.core.CoreType"),
+                messages(kotlinViolations));
     }
 
     @Test
@@ -207,7 +221,9 @@ class SourceBoundaryCheckerTest {
                 List.of(externalSource),
                 Map.of("api", List.of("core")));
 
-        assertEquals(List.of("com/acme/Other.java:4: fully qualified type org.example.core.CoreType"), messages(violations));
+        assertEquals(
+                List.of("com/acme/Other.java:4: fully qualified type org.example.core.CoreType"),
+                messages(violations));
     }
 
     @Test
@@ -249,7 +265,9 @@ class SourceBoundaryCheckerTest {
                 List.of(misplacedSource),
                 Map.of("api", List.of("core")));
 
-        assertEquals(List.of("incorrect/path/Api.java:3: banned import org.example.core.CoreType"), messages(violations));
+        assertEquals(
+                List.of("incorrect/path/Api.java:3: banned import org.example.core.CoreType"),
+                messages(violations));
     }
 
     @Test
@@ -267,7 +285,9 @@ class SourceBoundaryCheckerTest {
                 List.of(source),
                 Map.of("api", List.of("core")));
 
-        assertEquals(List.of("org/example/api/Api.java:4: fully qualified type org.example.core.CoreType"), messages(violations));
+        assertEquals(
+                List.of("org/example/api/Api.java:4: fully qualified type org.example.core.CoreType"),
+                messages(violations));
     }
 
     @Test
@@ -307,7 +327,9 @@ class SourceBoundaryCheckerTest {
                 List.of(source),
                 Map.of("api", List.of("core")));
 
-        assertEquals(List.of("org/example/api/Api.kt:4: fully qualified type org.example.core.CoreType"), messages(violations));
+        assertEquals(
+                List.of("org/example/api/Api.kt:4: fully qualified type org.example.core.CoreType"),
+                messages(violations));
     }
 
     @Test
@@ -341,11 +363,16 @@ class SourceBoundaryCheckerTest {
                 """);
 
         var violations = check(
-                List.of(tempDir.resolve("missing"), tempDir.resolve("src/empty/java"), tempDir.resolve("src/main/java")),
+                List.of(
+                        tempDir.resolve("missing"),
+                        tempDir.resolve("src/empty/java"),
+                        tempDir.resolve("src/main/java")),
                 List.of(source),
                 Map.of("api", List.of("core")));
 
-        assertEquals(List.of("org/example/api/Api.java:4: fully qualified type org.example.core.CoreType"), messages(violations));
+        assertEquals(
+                List.of("org/example/api/Api.java:4: fully qualified type org.example.core.CoreType"),
+                messages(violations));
     }
 
     @Test

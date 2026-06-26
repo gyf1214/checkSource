@@ -15,7 +15,8 @@ public final class KotlinGradlePluginSourceRootConfigurator implements KotlinSou
     public void configure(Project project, CheckSourceExtension extension, CheckSourceTask task) {
         var sourceSets = kotlinSourceSets(project);
         configureSourceSet(project, task, extension.getIncludeKotlin(), kotlinSourceSet(sourceSets, "main"));
-        configureSourceSet(project, task, extension.getIncludeKotlin().zip(extension.getIncludeTest(), (kotlin, test) -> kotlin && test),
+        configureSourceSet(project, task,
+                extension.getIncludeKotlin().zip(extension.getIncludeTest(), (kotlin, test) -> kotlin && test),
                 kotlinSourceSet(sourceSets, "test"));
     }
 
@@ -33,7 +34,9 @@ public final class KotlinGradlePluginSourceRootConfigurator implements KotlinSou
                     .toList();
         });
         task.getSourceRoots().from(sourceRoots);
-        task.getSourceFiles().from(project.files(sourceRoots).getAsFileTree().matching(pattern -> pattern.include("**/*.kt")));
+        task.getSourceFiles().from(project.files(sourceRoots)
+                .getAsFileTree()
+                .matching(pattern -> pattern.include("**/*.kt")));
     }
 
     @SuppressWarnings("unchecked")
