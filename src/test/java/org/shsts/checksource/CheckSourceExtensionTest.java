@@ -54,6 +54,22 @@ class CheckSourceExtensionTest {
         assertFalse(extension.getIncludeTest().get());
     }
 
+    @Test
+    void includeKotlinFlipsKotlinSourceScanningOn() {
+        var extension = extension();
+
+        extension.includeKotlin();
+
+        assertTrue(extension.getIncludeKotlin().get());
+    }
+
+    @Test
+    void includeKotlinDefaultsToFalse() {
+        var extension = extension();
+
+        assertFalse(extension.getIncludeKotlin().get());
+    }
+
     private static CheckSourceExtension extension() {
         var project = ProjectBuilder.builder().build();
         return project.getExtensions().create("checkSource", CheckSourceExtension.class);

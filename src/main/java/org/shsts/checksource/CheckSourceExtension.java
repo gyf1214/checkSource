@@ -14,12 +14,14 @@ public class CheckSourceExtension {
     private final Property<String> topPackage;
     private final MapProperty<String, List<String>> bannedImports;
     private final Property<Boolean> includeTest;
+    private final Property<Boolean> includeKotlin;
 
     @Inject
     public CheckSourceExtension(ObjectFactory objects) {
         topPackage = objects.property(String.class);
         bannedImports = objects.mapProperty(String.class, listType());
         includeTest = objects.property(Boolean.class).convention(false);
+        includeKotlin = objects.property(Boolean.class).convention(false);
     }
 
     public Property<String> getTopPackage() {
@@ -32,6 +34,10 @@ public class CheckSourceExtension {
 
     public Property<Boolean> getIncludeTest() {
         return includeTest;
+    }
+
+    public Property<Boolean> getIncludeKotlin() {
+        return includeKotlin;
     }
 
     public void topPackage(String value) {
@@ -48,6 +54,10 @@ public class CheckSourceExtension {
 
     public void includeTest() {
         includeTest.set(true);
+    }
+
+    public void includeKotlin() {
+        includeKotlin.set(true);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
