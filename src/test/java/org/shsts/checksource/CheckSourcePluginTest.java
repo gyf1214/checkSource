@@ -529,9 +529,10 @@ class CheckSourcePluginTest {
                 """.formatted(KOTLIN_VERSION));
 
         runner("checkSource", "--configuration-cache").build();
-        var result = runner("checkSource", "--configuration-cache").build();
+        var result = runner("checkSource", "--configuration-cache", "--rerun-tasks").build();
 
         assertTrue(result.getOutput().contains("Configuration cache entry reused."));
+        assertEquals(TaskOutcome.SUCCESS, result.task(":checkSource").getOutcome());
     }
 
     @Test
@@ -551,9 +552,10 @@ class CheckSourcePluginTest {
                 """);
 
         runner("checkSource", "--configuration-cache").build();
-        var result = runner("checkSource", "--configuration-cache").build();
+        var result = runner("checkSource", "--configuration-cache", "--rerun-tasks").build();
 
         assertTrue(result.getOutput().contains("Configuration cache entry reused."));
+        assertEquals(TaskOutcome.SUCCESS, result.task(":checkSource").getOutcome());
     }
 
     private void writeBuild(String buildFile) throws IOException {

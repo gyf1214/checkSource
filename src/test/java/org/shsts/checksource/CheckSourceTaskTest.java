@@ -33,8 +33,8 @@ class CheckSourceTaskTest {
         var task = task(reportFile);
         task.getTopPackage().set("org.example");
         task.getBannedImports().set(Map.of("api", List.of("core")));
-        task.getSourceRoots().from(tempDir.resolve("src/main/java"));
-        task.getSourceFiles().from(source);
+        task.getMainJavaSourceRoots().from(tempDir.resolve("src/main/java"));
+        task.getMainJavaSourceFiles().from(source);
 
         var error = assertThrows(GradleException.class, task::run);
 
@@ -58,8 +58,8 @@ class CheckSourceTaskTest {
         var task = task(reportFile);
         task.getTopPackage().set("org.example");
         task.getBannedImports().set(Map.of("api", List.of("core")));
-        task.getSourceRoots().from(tempDir.resolve("src/main/java"));
-        task.getSourceFiles().from(source);
+        task.getMainJavaSourceRoots().from(tempDir.resolve("src/main/java"));
+        task.getMainJavaSourceFiles().from(source);
 
         assertThrows(GradleException.class, task::run);
 
@@ -82,8 +82,8 @@ class CheckSourceTaskTest {
         var task = task(reportFile);
         task.getTopPackage().set("org.example");
         task.getBannedImports().set(Map.of("api", List.of("core")));
-        task.getSourceRoots().from(tempDir.resolve("src/main/java"));
-        task.getSourceFiles().from(source);
+        task.getMainJavaSourceRoots().from(tempDir.resolve("src/main/java"));
+        task.getMainJavaSourceFiles().from(source);
 
         task.run();
 
@@ -112,8 +112,8 @@ class CheckSourceTaskTest {
         var reportFile = tempDir.resolve("build/reports/checkSource/violations.txt");
         var task = task(reportFile);
         task.getBannedImports().set(Map.of());
-        task.getSourceRoots().from(tempDir.resolve("src/main/java"));
-        task.getSourceFiles().from(source);
+        task.getMainJavaSourceRoots().from(tempDir.resolve("src/main/java"));
+        task.getMainJavaSourceFiles().from(source);
 
         task.run();
 
@@ -132,14 +132,39 @@ class CheckSourceTaskTest {
         var task = task(reportFile);
         task.getTopPackage().set("org.example");
         task.getBannedImports().set(Map.of());
-        task.getSourceRoots().from(tempDir.resolve("src/main/java"));
-        task.getSourceFiles().from(source);
+        task.getMainJavaSourceRoots().from(tempDir.resolve("src/main/java"));
+        task.getMainJavaSourceFiles().from(source);
         task.getIncludeKotlin().set(true);
         task.getKotlinPluginPresent().set(false);
 
         var error = assertThrows(GradleException.class, task::run);
 
         assertEquals("checkSource includeKotlin() requires the org.jetbrains.kotlin.jvm plugin", error.getMessage());
+    }
+
+    @Test
+    void testSourcesAreIgnoredWhenIncludeTestIsFalse() throws IOException {
+        var testSource = tempDir.resolve("src/test/java/org/example/api/ApiTest.java");
+        Files.createDirectories(testSource.getParent());
+        Files.writeString(testSource, """
+                package org.example.api;
+
+                import org.example.core.CoreType;
+
+                class ApiTest {
+                }
+                """);
+        var reportFile = tempDir.resolve("build/reports/checkSource/violations.txt");
+        var task = task(reportFile);
+        task.getTopPackage().set("org.example");
+        task.getBannedImports().set(Map.of("api", List.of("core")));
+        task.getIncludeTest().set(false);
+        task.getTestJavaSourceRoots().from(tempDir.resolve("src/test/java"));
+        task.getTestJavaSourceFiles().from(testSource);
+
+        task.run();
+
+        assertEquals("", Files.readString(reportFile));
     }
 
     @Test
@@ -162,8 +187,8 @@ class CheckSourceTaskTest {
         var task = task(reportFile);
         task.getTopPackage().set("org.example");
         task.getBannedImports().set(Map.of("api", List.of("core")));
-        task.getSourceRoots().from(tempDir.resolve("src/main/java"));
-        task.getSourceFiles().from(included);
+        task.getMainJavaSourceRoots().from(tempDir.resolve("src/main/java"));
+        task.getMainJavaSourceFiles().from(included);
 
         task.run();
 
@@ -184,8 +209,8 @@ class CheckSourceTaskTest {
         var task = task(reportFile);
         task.getTopPackage().set("org.example");
         task.getBannedImports().set(Map.of("api", List.of("core")));
-        task.getSourceRoots().from(tempDir.resolve("src/main/java"));
-        task.getSourceFiles().from(source);
+        task.getMainJavaSourceRoots().from(tempDir.resolve("src/main/java"));
+        task.getMainJavaSourceFiles().from(source);
 
         task.run();
 

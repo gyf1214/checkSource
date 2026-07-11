@@ -4,38 +4,20 @@ import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.provider.Provider;
 
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 
 public final class KotlinGradlePluginSourceRootConfigurator implements KotlinSourceRootConfigurator {
     @Override
-    public void configure(Project project, CheckSourceExtension extension, CheckSourceTask task) {
+    public void configure(Project project, CheckSourceTask task) {
         var sourceSets = kotlinSourceSets(project);
-        configureSourceSet(project, task, extension.getIncludeKotlin(), kotlinSourceSet(sourceSets, "main"));
-        configureSourceSet(project, task,
-                extension.getIncludeKotlin().zip(extension.getIncludeTest(), (kotlin, test) -> kotlin && test),
-                kotlinSourceSet(sourceSets, "test"));
-    }
-
-    private static void configureSourceSet(
-            Project project,
-            CheckSourceTask task,
-            Provider<Boolean> enabled,
-            SourceDirectorySet kotlinSources) {
-        var sourceRoots = project.provider(() -> {
-            if (!enabled.getOrElse(false)) {
-                return new ArrayList<>();
-            }
-            return kotlinSources.getSrcDirs().stream()
-                    .filter(KotlinGradlePluginSourceRootConfigurator::isNotGeneratedKotlin)
-                    .toList();
-        });
-        task.getSourceRoots().from(sourceRoots);
-        task.getSourceFiles().from(project.files(sourceRoots)
-                .getAsFileTree()
+        var mainSources = kotlinSourceSet(sourceSets, "main");
+        var testSources = kotlinSourceSet(sourceSets, "test");
+        task.getMainKotlinSourceRoots().from(mainSources.getSourceDirectories());
+        task.getMainKotlinSourceFiles().from(mainSources.getAsFileTree()
+                .matching(pattern -> pattern.include("**/*.kt")));
+        task.getTestKotlinSourceRoots().from(testSources.getSourceDirectories());
+        task.getTestKotlinSourceFiles().from(testSources.getAsFileTree()
                 .matching(pattern -> pattern.include("**/*.kt")));
     }
 
@@ -62,12 +44,4 @@ public final class KotlinGradlePluginSourceRootConfigurator implements KotlinSou
         }
     }
 
-    private static boolean isNotGeneratedKotlin(File sourceRoot) {
-        for (var path : sourceRoot.toPath().normalize()) {
-            if (path.toString().equals("generatedKotlin")) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

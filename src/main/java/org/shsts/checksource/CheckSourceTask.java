@@ -16,19 +16,42 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @CacheableTask
 public abstract class CheckSourceTask extends DefaultTask {
     @Internal
-    public abstract ConfigurableFileCollection getSourceRoots();
+    public abstract ConfigurableFileCollection getMainJavaSourceRoots();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract ConfigurableFileCollection getSourceFiles();
+    public abstract ConfigurableFileCollection getMainJavaSourceFiles();
+
+    @Internal
+    public abstract ConfigurableFileCollection getTestJavaSourceRoots();
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract ConfigurableFileCollection getTestJavaSourceFiles();
+
+    @Internal
+    public abstract ConfigurableFileCollection getMainKotlinSourceRoots();
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract ConfigurableFileCollection getMainKotlinSourceFiles();
+
+    @Internal
+    public abstract ConfigurableFileCollection getTestKotlinSourceRoots();
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract ConfigurableFileCollection getTestKotlinSourceFiles();
 
     @Input
     @Optional
@@ -39,6 +62,9 @@ public abstract class CheckSourceTask extends DefaultTask {
 
     @Input
     public abstract Property<Boolean> getIncludeKotlin();
+
+    @Input
+    public abstract Property<Boolean> getIncludeTest();
 
     @Internal
     public abstract Property<Boolean> getKotlinPluginPresent();
@@ -67,15 +93,23 @@ public abstract class CheckSourceTask extends DefaultTask {
             throw new UncheckedIOException(ex);
         }
 
-        var sourceRoots = getSourceRoots().getFiles().stream()
-                .map(file -> file.toPath())
-                .toList();
-        var sourceFiles = getSourceFiles().getFiles().stream()
-                .map(file -> file.toPath())
-                .toList();
+        var sourceRoots = new ArrayList<File>();
+        var sourceFiles = new ArrayList<File>();
+        addSources(sourceRoots, sourceFiles, getMainJavaSourceRoots(), getMainJavaSourceFiles());
+        if (getIncludeTest().getOrElse(false)) {
+            addSources(sourceRoots, sourceFiles, getTestJavaSourceRoots(), getTestJavaSourceFiles());
+        }
+        if (getIncludeKotlin().getOrElse(false)) {
+            addKotlinSources(
+                    sourceRoots, sourceFiles, getMainKotlinSourceRoots(), getMainKotlinSourceFiles());
+            if (getIncludeTest().getOrElse(false)) {
+                addKotlinSources(
+                        sourceRoots, sourceFiles, getTestKotlinSourceRoots(), getTestKotlinSourceFiles());
+            }
+        }
         var violations = SourceBoundaryChecker.check(
-                sourceRoots,
-                sourceFiles,
+                sourceRoots.stream().map(File::toPath).toList(),
+                sourceFiles.stream().map(File::toPath).toList(),
                 getTopPackage().getOrElse(""),
                 bannedImports);
 
@@ -94,5 +128,37 @@ public abstract class CheckSourceTask extends DefaultTask {
         if (!violations.isEmpty()) {
             throw new GradleException("checkSource found violations. See " + reportFile);
         }
+    }
+
+    private static void addSources(
+            List<File> sourceRoots,
+            List<File> sourceFiles,
+            ConfigurableFileCollection roots,
+            ConfigurableFileCollection files) {
+        sourceRoots.addAll(roots.getFiles());
+        sourceFiles.addAll(files.getFiles());
+    }
+
+    private static void addKotlinSources(
+            List<File> sourceRoots,
+            List<File> sourceFiles,
+            ConfigurableFileCollection roots,
+            ConfigurableFileCollection files) {
+        var includedRoots = roots.getFiles().stream()
+                .filter(CheckSourceTask::isNotGeneratedKotlin)
+                .toList();
+        sourceRoots.addAll(includedRoots);
+        files.getFiles().stream()
+                .filter(file -> includedRoots.stream().anyMatch(root -> file.toPath().startsWith(root.toPath())))
+                .forEach(sourceFiles::add);
+    }
+
+    private static boolean isNotGeneratedKotlin(File sourceRoot) {
+        for (var path : sourceRoot.toPath().normalize()) {
+            if (path.toString().equals("generatedKotlin")) {
+                return false;
+            }
+        }
+        return true;
     }
 }

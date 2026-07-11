@@ -7,8 +7,6 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 
-import java.util.ArrayList;
-
 public final class CheckSourcePlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
@@ -25,24 +23,21 @@ public final class CheckSourcePlugin implements Plugin<Project> {
             task.getTopPackage().set(extension.getTopPackage());
             task.getBannedImports().set(extension.getBannedImports());
             task.getIncludeKotlin().set(extension.getIncludeKotlin());
+            task.getIncludeTest().set(extension.getIncludeTest());
             task.getKotlinPluginPresent().convention(false);
             task.getReportFile().convention(project.getLayout()
                     .getBuildDirectory()
                     .file("reports/checkSource/violations.txt"));
-            task.getSourceRoots().from(mainSourceSet.getJava().getSrcDirs());
-            task.getSourceFiles().from(mainSourceSet.getJava());
-            task.getSourceRoots().from(project.provider(() -> extension.getIncludeTest().get() ?
-                    testSourceSet.getJava().getSrcDirs() :
-                    new ArrayList<>()));
-            task.getSourceFiles().from(project.provider(() -> extension.getIncludeTest().get() ?
-                    testSourceSet.getJava() :
-                    new ArrayList<>()));
+            task.getMainJavaSourceRoots().from(mainSourceSet.getJava().getSourceDirectories());
+            task.getMainJavaSourceFiles().from(mainSourceSet.getJava());
+            task.getTestJavaSourceRoots().from(testSourceSet.getJava().getSourceDirectories());
+            task.getTestJavaSourceFiles().from(testSourceSet.getJava());
         });
 
         project.getPluginManager().withPlugin("org.jetbrains.kotlin.jvm", ignored ->
                 checkSource.configure(task -> {
                     task.getKotlinPluginPresent().set(true);
-                    kotlinSourceRootConfigurator().configure(project, extension, task);
+                    kotlinSourceRootConfigurator().configure(project, task);
                 }));
 
         project.getTasks()
