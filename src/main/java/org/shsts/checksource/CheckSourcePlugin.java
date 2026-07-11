@@ -7,7 +7,7 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 
-import java.util.Collections;
+import java.util.ArrayList;
 
 public final class CheckSourcePlugin implements Plugin<Project> {
     @Override
@@ -33,10 +33,10 @@ public final class CheckSourcePlugin implements Plugin<Project> {
             task.getSourceFiles().from(mainSourceSet.getJava());
             task.getSourceRoots().from(project.provider(() -> extension.getIncludeTest().get() ?
                     testSourceSet.getJava().getSrcDirs() :
-                    Collections.emptyList()));
+                    new ArrayList<>()));
             task.getSourceFiles().from(project.provider(() -> extension.getIncludeTest().get() ?
                     testSourceSet.getJava() :
-                    Collections.emptyList()));
+                    new ArrayList<>()));
         });
 
         project.getPluginManager().withPlugin("org.jetbrains.kotlin.jvm", ignored ->

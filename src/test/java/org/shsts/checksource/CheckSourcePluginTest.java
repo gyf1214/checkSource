@@ -534,6 +534,28 @@ class CheckSourcePluginTest {
         assertTrue(result.getOutput().contains("Configuration cache entry reused."));
     }
 
+    @Test
+    void configurationCacheReusesPluginWhenTestSourcesAreIncludedButAbsent() throws IOException {
+        writeBuild("""
+                plugins { id("org.shsts.checksource") }
+
+                checkSource {
+                    includeTest()
+                }
+                """);
+        writeSource("src/main/java/org/example/api/Api.java", """
+                package org.example.api;
+
+                class Api {
+                }
+                """);
+
+        runner("checkSource", "--configuration-cache").build();
+        var result = runner("checkSource", "--configuration-cache").build();
+
+        assertTrue(result.getOutput().contains("Configuration cache entry reused."));
+    }
+
     private void writeBuild(String buildFile) throws IOException {
         Files.writeString(projectDir.resolve("settings.gradle.kts"), "rootProject.name = \"consumer\"\n");
         Files.writeString(projectDir.resolve("build.gradle.kts"), buildFile);
