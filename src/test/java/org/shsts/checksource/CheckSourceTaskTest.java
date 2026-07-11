@@ -45,6 +45,30 @@ class CheckSourceTaskTest {
     }
 
     @Test
+    void violationReportUsesLfLineEndings() throws IOException {
+        var source = writeSource("Api.java", """
+                package org.example.api;
+
+                import org.example.core.CoreType;
+
+                class Api {
+                }
+                """);
+        var reportFile = tempDir.resolve("build/reports/checkSource/violations.txt");
+        var task = task(reportFile);
+        task.getTopPackage().set("org.example");
+        task.getBannedImports().set(Map.of("api", List.of("core")));
+        task.getSourceRoots().from(tempDir.resolve("src/main/java"));
+        task.getSourceFiles().from(source);
+
+        assertThrows(GradleException.class, task::run);
+
+        assertEquals(
+                "org/example/api/Api.java:3: banned import org.example.core.CoreType\n",
+                Files.readString(reportFile));
+    }
+
+    @Test
     void cleanSourcesPassAndProduceEmptyReportFile() throws IOException {
         var source = writeSource("Api.java", """
                 package org.example.api;

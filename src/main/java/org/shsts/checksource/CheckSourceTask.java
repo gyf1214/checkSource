@@ -78,10 +78,10 @@ public abstract class CheckSourceTask extends DefaultTask {
 
         try {
             var report = String.join(
-                    System.lineSeparator(),
+                    "\n",
                     violations.stream().map(SourceBoundaryChecker.Violation::message).toList());
             if (!report.isEmpty()) {
-                report += System.lineSeparator();
+                report += "\n";
             }
             java.nio.file.Files.writeString(reportFile, report);
         } catch (IOException ex) {
