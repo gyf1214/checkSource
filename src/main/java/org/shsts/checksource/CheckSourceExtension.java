@@ -48,7 +48,7 @@ public class CheckSourceExtension {
         var imports = new LinkedHashMap<>(bannedImports.getOrElse(Map.of()));
         var values = new ArrayList<>(imports.getOrDefault(sourcePackage, List.of()));
         values.addAll(List.of(bannedPackages));
-        imports.put(sourcePackage, List.copyOf(values));
+        imports.put(sourcePackage, new ArrayList<>(values));
         bannedImports.set(imports);
     }
 

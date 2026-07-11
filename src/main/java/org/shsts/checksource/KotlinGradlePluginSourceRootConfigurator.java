@@ -8,7 +8,7 @@ import org.gradle.api.provider.Provider;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
+import java.util.Collections;
 
 public final class KotlinGradlePluginSourceRootConfigurator implements KotlinSourceRootConfigurator {
     @Override
@@ -27,7 +27,7 @@ public final class KotlinGradlePluginSourceRootConfigurator implements KotlinSou
             SourceDirectorySet kotlinSources) {
         var sourceRoots = project.provider(() -> {
             if (!enabled.getOrElse(false)) {
-                return List.<File>of();
+                return Collections.emptyList();
             }
             return kotlinSources.getSrcDirs().stream()
                     .filter(KotlinGradlePluginSourceRootConfigurator::isNotGeneratedKotlin)
