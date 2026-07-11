@@ -44,7 +44,7 @@ checkSource {
 }
 ```
 
-`topPackage(...)` is required. It defines the package root used for import-boundary rules.
+`topPackage(...)` is required only when `banImport(...)` rules are configured. It defines the package root used for import-boundary rules.
 
 `banImport(sourcePackage, bannedPackages...)` bans imports where code in `topPackage.sourcePackage` imports a type from any listed sibling package. Repeated calls for the same source package append more banned targets.
 

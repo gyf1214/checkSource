@@ -91,13 +91,33 @@ class CheckSourceTaskTest {
     }
 
     @Test
-    void missingTopPackageFailsWithClearTaskError() {
+    void missingTopPackageFailsWithClearTaskErrorWhenBannedImportsAreConfigured() {
         var reportFile = tempDir.resolve("build/reports/checkSource/violations.txt");
         var task = task(reportFile);
+        task.getBannedImports().set(Map.of("api", List.of("core")));
 
         var error = assertThrows(GradleException.class, task::run);
 
         assertEquals("checkSource requires topPackage(...)", error.getMessage());
+    }
+
+    @Test
+    void missingTopPackagePassesWhenNoBannedImportsAreConfigured() throws IOException {
+        var source = writeSource("Api.java", """
+                package org.example.api;
+
+                class Api {
+                }
+                """);
+        var reportFile = tempDir.resolve("build/reports/checkSource/violations.txt");
+        var task = task(reportFile);
+        task.getBannedImports().set(Map.of());
+        task.getSourceRoots().from(tempDir.resolve("src/main/java"));
+        task.getSourceFiles().from(source);
+
+        task.run();
+
+        assertEquals("", Files.readString(reportFile));
     }
 
     @Test

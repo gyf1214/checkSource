@@ -105,6 +105,24 @@ class CheckSourcePluginTest {
     }
 
     @Test
+    void topPackageIsOptionalWhenNoBannedImportsAreConfigured() throws IOException {
+        writeBuild("""
+                plugins { id("org.shsts.checksource") }
+                """);
+        writeSource("src/main/java/org/example/api/Api.java", """
+                package org.example.api;
+
+                class Api {
+                }
+                """);
+
+        var result = runner("checkSource").build();
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":checkSource").getOutcome());
+        assertEquals("", Files.readString(projectDir.resolve("build/reports/checkSource/violations.txt")));
+    }
+
+    @Test
     void extraMainJavaSourceDirectoryIsScanned() throws IOException {
         writeBuild("""
                 plugins { id("org.shsts.checksource") }

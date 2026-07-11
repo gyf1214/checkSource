@@ -10,6 +10,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -30,6 +31,7 @@ public abstract class CheckSourceTask extends DefaultTask {
     public abstract ConfigurableFileCollection getSourceFiles();
 
     @Input
+    @Optional
     public abstract Property<String> getTopPackage();
 
     @Input
@@ -46,7 +48,8 @@ public abstract class CheckSourceTask extends DefaultTask {
 
     @TaskAction
     public void run() {
-        if (!getTopPackage().isPresent()) {
+        var bannedImports = getBannedImports().getOrElse(Map.of());
+        if (!bannedImports.isEmpty() && !getTopPackage().isPresent()) {
             throw new GradleException("checkSource requires topPackage(...)");
         }
         if (getIncludeKotlin().getOrElse(false) && !getKotlinPluginPresent().getOrElse(false)) {
@@ -73,8 +76,8 @@ public abstract class CheckSourceTask extends DefaultTask {
         var violations = SourceBoundaryChecker.check(
                 sourceRoots,
                 sourceFiles,
-                getTopPackage().get(),
-                getBannedImports().getOrElse(Map.of()));
+                getTopPackage().getOrElse(""),
+                bannedImports);
 
         try {
             var report = String.join(
