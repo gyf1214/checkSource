@@ -13,7 +13,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CheckSourcePluginTest {
-    private static final String KOTLIN_VERSION = "1.9.20";
+    private static final String LEGACY_GRADLE_VERSION = "8.5";
+    private static final String LEGACY_KOTLIN_VERSION = "1.9.20";
+    private static final String LATEST_GRADLE_VERSION = "9.7.1";
+    private static final String LATEST_KOTLIN_VERSION = "2.4.10";
 
     @TempDir
     Path projectDir;
@@ -244,7 +247,7 @@ class CheckSourcePluginTest {
                     topPackage("org.example")
                     banImport("api", "core")
                 }
-                """.formatted(KOTLIN_VERSION));
+                """.formatted(LEGACY_KOTLIN_VERSION));
         writeSource("src/main/kotlin/org/example/api/Api.kt", """
                 package org.example.api
 
@@ -274,7 +277,7 @@ class CheckSourcePluginTest {
                     banImport("api", "core")
                     includeKotlin()
                 }
-                """.formatted(KOTLIN_VERSION));
+                """.formatted(LEGACY_KOTLIN_VERSION));
         writeSource("src/main/kotlin/org/example/api/Api.kt", """
                 package org.example.api
 
@@ -306,7 +309,7 @@ class CheckSourcePluginTest {
                     banImport("api", "core")
                     includeKotlin()
                 }
-                """.formatted(KOTLIN_VERSION));
+                """.formatted(LEGACY_KOTLIN_VERSION));
         writeSource("src/test/kotlin/org/example/api/ApiTest.kt", """
                 package org.example.api
 
@@ -337,7 +340,7 @@ class CheckSourcePluginTest {
                     includeKotlin()
                     includeTest()
                 }
-                """.formatted(KOTLIN_VERSION));
+                """.formatted(LEGACY_KOTLIN_VERSION));
         writeSource("src/test/kotlin/org/example/api/ApiTest.kt", """
                 package org.example.api
 
@@ -395,7 +398,7 @@ class CheckSourcePluginTest {
                     banImport("api", "core")
                     includeKotlin()
                 }
-                """.formatted(KOTLIN_VERSION));
+                """.formatted(LEGACY_KOTLIN_VERSION));
         writeSource("src/custom/kotlin/org/example/api/CustomApi.kt", """
                 package org.example.api
 
@@ -435,7 +438,7 @@ class CheckSourcePluginTest {
                     banImport("api", "core")
                     includeKotlin()
                 }
-                """.formatted(KOTLIN_VERSION));
+                """.formatted(LEGACY_KOTLIN_VERSION));
         writeSource("build/generatedKotlin/main/org/example/api/GeneratedApi.kt", """
                 package org.example.api
 
@@ -464,7 +467,7 @@ class CheckSourcePluginTest {
                     topPackage("org.example")
                     includeKotlin()
                 }
-                """.formatted(KOTLIN_VERSION));
+                """.formatted(LEGACY_KOTLIN_VERSION));
         writeSource("src/main/kotlin/org/example/api/Api.kt", """
                 package org.example.api
 
@@ -493,7 +496,7 @@ class CheckSourcePluginTest {
                     includeKotlin()
                     includeTest()
                 }
-                """.formatted(KOTLIN_VERSION));
+                """.formatted(LEGACY_KOTLIN_VERSION));
         writeSource("src/main/java/org/example/api/Api.java", """
                 package org.example.api;
 
@@ -526,7 +529,7 @@ class CheckSourcePluginTest {
                     topPackage("org.example")
                     banImport("api", "core")
                 }
-                """.formatted(KOTLIN_VERSION));
+                """.formatted(LEGACY_KOTLIN_VERSION));
 
         runner("checkSource", "--configuration-cache").build();
         var result = runner("checkSource", "--configuration-cache", "--rerun-tasks").build();
@@ -558,6 +561,32 @@ class CheckSourcePluginTest {
         assertEquals(TaskOutcome.SUCCESS, result.task(":checkSource").getOutcome());
     }
 
+    @Test
+    void latestGradleAndKotlinCanCheckKotlinSources() throws IOException {
+        writeBuild("""
+                plugins {
+                    id("org.shsts.checksource")
+                    id("org.jetbrains.kotlin.jvm") version "%s"
+                }
+
+                repositories { mavenCentral() }
+
+                checkSource {
+                    topPackage("org.example")
+                    includeKotlin()
+                }
+                """.formatted(LATEST_KOTLIN_VERSION));
+        writeSource("src/main/kotlin/org/example/api/Api.kt", """
+                package org.example.api
+
+                class Api
+                """);
+
+        var result = runnerWithGradle(LATEST_GRADLE_VERSION, "checkSource").build();
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":checkSource").getOutcome());
+    }
+
     private void writeBuild(String buildFile) throws IOException {
         Files.writeString(projectDir.resolve("settings.gradle.kts"), "rootProject.name = \"consumer\"\n");
         Files.writeString(projectDir.resolve("build.gradle.kts"), buildFile);
@@ -570,10 +599,14 @@ class CheckSourcePluginTest {
     }
 
     private GradleRunner runner(String... arguments) {
+        return runnerWithGradle(LEGACY_GRADLE_VERSION, arguments);
+    }
+
+    private GradleRunner runnerWithGradle(String gradleVersion, String... arguments) {
         return GradleRunner.create()
                 .withProjectDir(projectDir.toFile())
                 .withPluginClasspath()
-                .withGradleVersion("8.5")
+                .withGradleVersion(gradleVersion)
                 .withArguments(arguments)
                 .forwardOutput();
     }
